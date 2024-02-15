@@ -10,6 +10,8 @@ def validate_module_name(answers,current):
 
     return True
 
+# TODO: Add a function that writes a jinja2 template to a file
+
 # Genaration functions
 def generateModule(generateOptions):
     main_directory = os.getcwd()
@@ -25,15 +27,24 @@ def generateModule(generateOptions):
 
 if __name__ == "__main__":
 
+    # TODO: Add prompts for manifest file
     prompts = [inquirer.Text('technical_name',message="Enter the name of your module", validate=validate_module_name),
             inquirer.Checkbox(
                     "folders",
                     message="Select which folders you wish to generate",
                     choices=["Models","Views","Controllers","Security","Reports"]
                 ),
+                inquirer.List(
+                                    "advanced_options",
+                                    message="Do you want to go to advanced options? (create model, controller etc. files)",
+                                    choices=[("Yes", True),("No", False)]
+                                ),                
     ]
 
     generateOptions = inquirer.prompt(prompts)  
+
+    if generateOptions.get("advanced_options"):
+        print(generateOptions.get("advanced_options"))
 
     generateModule(generateOptions)                         
 
