@@ -50,6 +50,20 @@ def generateModule(generateOptions, env):
     for folder in generateOptions.get("folders"):
         os.mkdir(folder.lower())
 
+        if folder.lower() in ["models", "controllers", "reports"]:
+            init_file_path = os.path.join(folder.lower(), "__init__.py")
+
+            with open(init_file_path, "w") as file:
+                file.write("")
+
+    with open("__init__.py", "w") as file:
+        filtered_folders = filter(
+            lambda item: item.lower() in ["models", "controllers", "reports"],
+            generateOptions.get("folders"),
+        )
+        imports = ", ".join(filtered_folders).lower()
+        file.write(f"from . import {imports}")
+
 
 if __name__ == "__main__":
 
