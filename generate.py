@@ -40,6 +40,7 @@ def generateModule(generateOptions, env):
         "module_name": generateOptions.get("name"),
         "module_version": generateOptions.get("author"),
         "module_author": generateOptions.get("version"),
+        "module_license": generateOptions.get("license"),
     }
     output_content = manifest_template.render(**manifest_options)
 
@@ -74,6 +75,22 @@ if __name__ == "__main__":
         inquirer.Text(
             "version",
             message="Enter version",
+        ),
+        inquirer.List(
+            "license",
+            message="Choose a license for your module",
+            choices=[
+                "GPL-2",
+                "GPL-2 or any later version",
+                "GPL-3",
+                "GPL-3 or any later version",
+                "AGPL-3",
+                "LGPL-3",
+                "Other OSI approved licence",
+                "OEEL-1",
+                "OPL-1",
+                "Other proprietary",
+            ],
         ),
         inquirer.Checkbox(
             "folders",
