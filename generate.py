@@ -1,5 +1,6 @@
 import os
 import inquirer
+import re
 
 from jinja2 import Environment, PackageLoader
 
@@ -17,6 +18,16 @@ def enterAddonsDir():
 def validate_module_name(answers, current):
 
     directroy_list = os.listdir()
+
+    pattern = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+    is_match = bool(pattern.match(current))
+
+    if not is_match:
+        raise inquirer.errors.ValidationError(
+            "",
+            reason="Invalid name: Whitespaces and symbols that are not '_' or '-' are not allowed",
+        )
 
     if current in directroy_list:
         raise inquirer.errors.ValidationError(
