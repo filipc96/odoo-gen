@@ -76,6 +76,23 @@ def generateModule(generateOptions, env):
         file.write(f"from . import {imports}")
 
 
+def get_advanced_values(type):
+    answers = []
+    state = inquirer.prompt(
+        [inquirer.Confirm("confirm", message=f"Would you like to create a {type}")]
+    )
+
+    while state.get("confirm"):
+        prompt = inquirer.prompt([inquirer.Text("name", message=f"Enter {type} name")])
+        answers.append(prompt.get("name"))
+
+        state = inquirer.prompt(
+            [inquirer.Confirm("confirm", message=f"Would you like to create a {type}")]
+        )
+
+    return answers
+
+
 if __name__ == "__main__":
 
     env = Environment(loader=PackageLoader("generate"))
@@ -130,8 +147,13 @@ if __name__ == "__main__":
     ]
 
     generateOptions = inquirer.prompt(prompts)
+    advanced_options = None
 
+    # TODO: Add advanced options - generate model, controller, menu, view
     if generateOptions.get("advanced_options"):
-        print(generateOptions.get("advanced_options"))
+        models = get_advanced_values("model")
+        controllers = get_advanced_values("controllers")
+        advanced_options = {"models": models, "controllers": controllers}
+        print(advanced_options)
 
     generateModule(generateOptions, env)
