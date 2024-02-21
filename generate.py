@@ -5,7 +5,7 @@ import re
 from jinja2 import Environment, PackageLoader
 
 
-def enterAddonsDir():
+def enter_addons_dir():
     directroy_list = os.listdir()
 
     if "addons" not in directroy_list:
@@ -15,18 +15,21 @@ def enterAddonsDir():
     os.chdir(os.path.join(main_directory, "addons"))
 
 
+# Validation functions
+def validate_file_name(answers, current):
+
+    pattern = re.compile(r"^[a-zA-Z0-9_]+$")
+    return bool(pattern.match(current))
+
+
 def validate_module_name(answers, current):
 
     directroy_list = os.listdir()
 
-    pattern = re.compile(r"^[a-zA-Z0-9_-]+$")
-
-    is_match = bool(pattern.match(current))
-
-    if not is_match:
+    if not validate_file_name(answers, current):
         raise inquirer.errors.ValidationError(
             "",
-            reason="Invalid name: Whitespaces and symbols that are not '_' or '-' are not allowed",
+            reason="Invalid name: Whitespaces and symbols are not allowed except '_'",
         )
 
     if current in directroy_list:
@@ -38,27 +41,49 @@ def validate_module_name(answers, current):
 
 
 # Genaration functions
-def generateModule(generateOptions, env):
+def generate_files(file_list, type):
 
+    env = Environment(loader=PackageLoader("generate"))
+
+    match type:
+        case "models":
+            file_template = env.get_template("model_template.py.jinja2")
+        case "controllers":
+            pass
+            # file_template = env.get_template("manifest_template.py.jinja2")
+
+    os.chdir(type)
+    for file in file_list:
+        class_name = "".join(word.capitalize() for word in file.split("_"))
+
+        file_options = {"class_name": class_name, "name": file}
+        output_content = file_template.render(**file_options)
+
+        with open(f"{file}.py", "w") as file:
+            file.write(output_content)
+
+
+def generate_module(generate_options, advanced_options):
+
+    env = Environment(loader=PackageLoader("generate"))
     manifest_template = env.get_template("manifest_template.py.jinja2")
-
     current_directory = os.getcwd()
 
-    os.mkdir(generateOptions.get("technical_name"))
-    os.chdir(os.path.join(current_directory, generateOptions.get("technical_name")))
+    os.mkdir(generate_options.get("technical_name"))
+    os.chdir(os.path.join(current_directory, generate_options.get("technical_name")))
 
     manifest_options = {
-        "module_name": generateOptions.get("name"),
-        "module_version": generateOptions.get("author"),
-        "module_author": generateOptions.get("version"),
-        "module_license": generateOptions.get("license"),
+        "module_name": generate_options.get("name"),
+        "module_version": generate_options.get("author"),
+        "module_author": generate_options.get("version"),
+        "module_license": generate_options.get("license"),
     }
     output_content = manifest_template.render(**manifest_options)
 
     with open("__manifest__.py", "w") as file:
         file.write(output_content)
 
-    for folder in generateOptions.get("folders"):
+    for folder in generate_options.get("folders"):
         os.mkdir(folder.lower())
 
         if folder.lower() in ["models", "controllers", "reports"]:
@@ -67,10 +92,18 @@ def generateModule(generateOptions, env):
             with open(init_file_path, "w") as file:
                 file.write("")
 
+    if generate_options.get("advanced_options"):
+
+        if "Models" in generate_options.get("folders"):
+            generate_files(advanced_options.get("models"), "models")
+
+        if "Controlers" in generate_options.get("folders"):
+            generate_files(advanced_options.get("controllers"), "controllers")
+
     with open("__init__.py", "w") as file:
         filtered_folders = filter(
             lambda item: item.lower() in ["models", "controllers", "reports"],
-            generateOptions.get("folders"),
+            generate_options.get("folders"),
         )
         imports = ", ".join(filtered_folders).lower()
         file.write(f"from . import {imports}")
@@ -83,11 +116,24 @@ def get_advanced_values(type):
     )
 
     while state.get("confirm"):
-        prompt = inquirer.prompt([inquirer.Text("name", message=f"Enter {type} name")])
+        prompt = inquirer.prompt(
+            [
+                inquirer.Text(
+                    "name",
+                    message=f"Enter {type} name",
+                    validate=validate_file_name,
+                )
+            ]
+        )
         answers.append(prompt.get("name"))
 
         state = inquirer.prompt(
-            [inquirer.Confirm("confirm", message=f"Would you like to create a {type}")]
+            [
+                inquirer.Confirm(
+                    "confirm",
+                    message=f"Would you like to create a {type}",
+                )
+            ]
         )
 
     return answers
@@ -95,9 +141,7 @@ def get_advanced_values(type):
 
 if __name__ == "__main__":
 
-    env = Environment(loader=PackageLoader("generate"))
-
-    enterAddonsDir()
+    enter_addons_dir()
 
     # TODO: Add more prompts for manifest file
     prompts = [
@@ -146,14 +190,21 @@ if __name__ == "__main__":
         ),
     ]
 
-    generateOptions = inquirer.prompt(prompts)
+    generate_options = inquirer.prompt(prompts)
     advanced_options = None
 
     # TODO: Add advanced options - generate model, controller, menu, view
-    if generateOptions.get("advanced_options"):
-        models = get_advanced_values("model")
-        controllers = get_advanced_values("controllers")
+    if generate_options.get("advanced_options"):
+        models = (
+            get_advanced_values("model")
+            if "Models" in generate_options.get("folders")
+            else None
+        )
+        controllers = (
+            get_advanced_values("controllers")
+            if "Controllers" in generate_options.get("folders")
+            else None
+        )
         advanced_options = {"models": models, "controllers": controllers}
-        print(advanced_options)
 
-    generateModule(generateOptions, env)
+    generate_module(generate_options, advanced_options)
