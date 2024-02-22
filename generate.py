@@ -49,8 +49,7 @@ def generate_files(file_list, type):
         case "models":
             file_template = env.get_template("model_template.py.jinja2")
         case "controllers":
-            pass
-            # file_template = env.get_template("manifest_template.py.jinja2")
+            file_template = env.get_template("controller_template.py.jinja2")
 
     os.chdir(type)
     for file in file_list:
@@ -61,6 +60,7 @@ def generate_files(file_list, type):
 
         with open(f"{file}.py", "w") as file:
             file.write(output_content)
+    os.chdir("..")
 
 
 def generate_module(generate_options, advanced_options):
@@ -97,7 +97,7 @@ def generate_module(generate_options, advanced_options):
         if "Models" in generate_options.get("folders"):
             generate_files(advanced_options.get("models"), "models")
 
-        if "Controlers" in generate_options.get("folders"):
+        if "Controllers" in generate_options.get("folders"):
             generate_files(advanced_options.get("controllers"), "controllers")
 
     with open("__init__.py", "w") as file:
@@ -139,8 +139,7 @@ def get_advanced_values(type):
     return answers
 
 
-if __name__ == "__main__":
-
+def main():
     enter_addons_dir()
 
     # TODO: Add more prompts for manifest file
@@ -208,3 +207,7 @@ if __name__ == "__main__":
         advanced_options = {"models": models, "controllers": controllers}
 
     generate_module(generate_options, advanced_options)
+
+
+if __name__ == "__main__":
+    main()

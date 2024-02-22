@@ -1,0 +1,7 @@
+from odoo import http
+
+class {{ class_name }}(http.Controller):
+   
+    @http.route('/my_route/', auth='public', csrf=False)
+    def my_route(self, **kw):
+       pass
