@@ -74,8 +74,8 @@ def generate_module(generate_options, advanced_options):
 
     manifest_options = {
         "module_name": generate_options.get("name"),
-        "module_version": generate_options.get("author"),
-        "module_author": generate_options.get("version"),
+        "module_version": generate_options.get("version"),
+        "module_author": generate_options.get("author"),
         "module_license": generate_options.get("license"),
     }
     output_content = manifest_template.render(**manifest_options)
